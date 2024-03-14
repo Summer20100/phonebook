@@ -6,24 +6,13 @@ import { useDelete } from "../hooks/useDelete";
 
 function Users() {
   const hasMounted = useRef(false);
+
   const [users, setUsers] = useState<IUser[]>([]);
-
-  const [id, setId] = useState(0);
-
-  console.log(id)
-
-  //useDelete(id, DB_URL_USERS);
-
-  //console.log(status);
-  if (!hasMounted.current && id !== 0) {
-    hasMounted.current = true;
-    const { loading, error, status } = useDelete(id, DB_URL_USERS);
-  }
-
-  
+  const { loading, error, status, deleteItem } = useDelete();
+ 
   useEffect(() => {
-    // if (!hasMounted.current) {
-      // hasMounted.current = true;
+    if (!hasMounted.current) {
+      hasMounted.current = true;
       fetch(DB_URL_USERS)
         .then(response => {
           if (!response.ok) {
@@ -39,11 +28,11 @@ function Users() {
           }
         })
         .catch(error => console.error('Error fetching data:', error));
-    // }
+    }
   }, [users]);
   
   const handleDelete = (user: IUser) => {
-    setId(user.id);
+    deleteItem(user.id, DB_URL_USERS);
   }
 
   return (
