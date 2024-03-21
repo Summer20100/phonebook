@@ -1,24 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IUser, IUserData } from "../models";
 import { AxiosError } from 'axios';
+import { DB_URL_USERS } from "../data/_secret";
 
-interface IRead {
-  users: IUser[];
+interface IPagination {
+  users: IUserData[];
   loading: boolean;
   error: string;
-  readItm: (id: number, url: string) => void;
+  pagination: (page: number, size: number) => void;
 }
 
-export function useRead(): IRead {
-  const [users, setUsers] = useState<IUser[]>([]);
-  const [loading, setLoading] = useState(false);
+export function usePagination(): IPagination {
+
+  const [users, setUsers] = useState<IUserData[]>([]);
+
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  async function readItm(id: number, url: string) {
-    setLoading(true);
+  async function pagination(page: number, size: number) {
     setError('');
+    setLoading(true);
 
-    await fetch(url + '/' + id)
+    fetch(`${DB_URL_USERS}?page=${page}&size=${size}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -34,11 +37,10 @@ export function useRead(): IRead {
       })
       .catch(error => {
         const e = error as AxiosError;
-        setError(e.message);
-        console.error('There was an error!', e);
+        console.error('Error fetching data:', e)
       })
     setLoading(false);
   }
 
-  return { users, loading, error, readItm }
+  return { users, loading, error, pagination }
 }

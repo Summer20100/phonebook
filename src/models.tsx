@@ -9,6 +9,7 @@ export interface IProduct {
     rate: number;
     count: number;
   };
+  data: object
 };
 
 export interface IUser {
@@ -23,4 +24,12 @@ export interface IUser {
   mobile_phone: string;
   actual_location: string;
   birthday: string;
-}
+};
+
+export interface IUserData {
+  currentPage: number;
+  data: IUser;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};

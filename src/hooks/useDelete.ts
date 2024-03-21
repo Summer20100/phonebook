@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { AxiosError } from 'axios';
 
 interface IDelete {
   loading: boolean;
@@ -15,7 +16,7 @@ export function useDelete(): IDelete {
   const deleteItem = (id: number, url: string) => {
     setLoading(true);
     setError('');
-    setStatus('');
+    setStatus({});
 
     fetch(`${url}/${id}`, {
       method: 'DELETE'
@@ -27,16 +28,15 @@ export function useDelete(): IDelete {
         return response.json();
       })
       .then(data => {
-        setStatus(`Delete successful ${id}`);
-        console.log('Delete successful');
+        setStatus(data);
+        console.log(data);
       })
       .catch(error => {
-        setError(error.message);
-        console.error('There was an error!', error);
+        const e = error as AxiosError;
+        setError(e.message);
+        console.error('There was an error!', e);
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      setLoading(false);
   };
 
   return { loading, error, status, deleteItem };

@@ -1,92 +1,49 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, FC } from "react"
 import { DB_URL_USERS } from "../data/_secret";
-import { IUser } from "../models";
+import { IUser, IUserData } from "../models";
 import { Link } from 'react-router-dom';
 import { useDelete } from "../hooks/useDelete";
+import { Loader } from "../components/Loader";
+import { ErrorMesage } from "../components/ErrorMesage";
+import { AxiosError } from 'axios';
+import { Pagination } from "../components/Pagination";
+import { usePagination } from "../hooks/usePagination";
+import { Table } from "../components/Table";
 
-function Users() {
-  const hasMounted = useRef(false);
+const Users: FC<IUserData> = () => {
+  const [size, setSize] = useState<number>(50);
+  const [page, setPage] = useState<number>(1);
 
-  const [users, setUsers] = useState<IUser[]>([]);
+  const currentPage = (page: number, size: number) => {
+    setPage(page);
+    setSize(size);
+  }
+    
   const { loading, error, status, deleteItem } = useDelete();
- 
+  const { users, loading: loadingData, error: errorData, pagination } = usePagination();
+
+  //console.log(loadingData)
+
   useEffect(() => {
-    if (!hasMounted.current) {
-      hasMounted.current = true;
-      fetch(DB_URL_USERS)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (Object.keys(data).length === 0 && data.constructor === Object) {
-            console.log('Empty data received');
-          } else {
-            setUsers(data);
-          }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-    }
-  }, [users]);
-  
+    pagination(page, size);
+  }, [page, size, status]);
+
+  const { data, pageSize, totalCount, totalPages } = users;
+
   const handleDelete = (user: IUser) => {
     deleteItem(user.id, DB_URL_USERS);
   }
 
+
   return (
-    <>
-      <table className="table">
-        <thead>
-          <tr>
-            <th scope="col">ID</th>
-            <th scope="col">User name (en)</th>
-            <th scope="col">Имя</th>
-            <th scope="col">Должность</th>
-            <th scope="col">Отдел</th>
-            <th scope="col">Локация</th>
-            <th scope="col">E-mail</th>
-            <th scope="col">Внутренний телефон</th>
-            <th scope="col">Мобильный телефон</th>
-            <th scope="col">Фактическое расположение</th>
-            <th scope="col">День Рождения</th>
-            <th scope="col"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            users.map((user: IUser, index) => (
-              <tr key={index + 1}>
-                <td>{user.id}</td>
-                <td>{user.name_en}</td>
-                <td>{user.name_ru}</td>
-                <td>{user.position}</td>
-                <td>{user.department}</td>
-                <td>{user.location}</td>
-                <td>{user.email}</td>
-                <td>{user.internal_phone}</td>
-                <td>
-                  <input type="tel" value={user.mobile_phone} />
-                </td>
-                <td>{user.actual_location}</td>
-                <td>{user.birthday}</td>
-                <td>
-                  <div className="d-flex align-self-center">
-                    <Link to={`/users/${ user.id }`} className="mr-1">
-                      <button type="button" className="btn btn-outline-success">R</button>
-                    </Link>
-                    <Link to="#" className="mr-1">
-                      <button type="button" className="btn btn-outline-danger" onClick={(e) => handleDelete(user)}> D </button>
-                    </Link>
-                  </div>
-                </td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
-    </>
+    <div className="container " >
+      <h1>{ loadingData }</h1>
+      {loadingData && <Loader />}
+      {error && <ErrorMesage error={error} />}
+      
+      <Pagination totalPages={totalPages} currentPage={currentPage} countElement="9" />
+      <Table data={ data } handleDelete={ handleDelete } />
+    </div>
   )
 }
 
